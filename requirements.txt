@@ -4,3 +4,4 @@ facenet-pytorch
 flask
 opencv-python
 pillow
+gunicorn
