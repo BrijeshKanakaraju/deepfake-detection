@@ -1,3 +1,6 @@
-Flask
-deepface
-Werkzeug
+torch
+torchvision
+facenet-pytorch
+flask
+opencv-python
+pillow
