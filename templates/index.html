@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Lenz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* General reset and background */
+        body, h1, h2, p {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f7fc;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .header {
+            background-color: #003366;
+            color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+        }
+
+        .upload-section {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #e2f1ff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-section input[type="file"] {
+            font-size: 1em;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .upload-section input[type="file"]:hover {
+            background-color: #0056b3;
+        }
+
+        .upload-section button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .upload-section button:hover {
+            background-color: #0056b3;
+        }
+
+        .result {
+            margin-top: 30px;
+            font-size: 1.3em;
+            padding: 20px;
+            background-color: #fff;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .result.success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .result.error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 1em;
+            color: #aaa;
+        }
+
+        .footer span {
+            color: #003366;
+            font-weight: bold;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .loading-spinner img {
+            width: 50px;
+            height: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Phantom Lenz</h1>
+            <p>Your face detection and fake video/image detection app</p>
+        </div>
+
+        <div class="upload-section">
+            <h2>Upload an Image or Video</h2>
+            <input type="file" id="fileInput" accept="image/*,video/*">
+            <br><br>
+            <button onclick="uploadFile()">Upload</button>
+            <div id="preview"></div>
+            <!-- Loading spinner -->
+            <div id="loadingSpinner" class="loading-spinner">
+                <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading...">
+                <p>Processing, please wait...</p>
+            </div>
+        </div>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <div class="footer">
+        <span>By AIX Team-4</span>
+    </div>
+
+    <script>
+        function uploadFile() {
+            var fileInput = document.getElementById("fileInput");
+            var file = fileInput.files[0];
+            if (!file) {
+                alert("Please select a file first!");
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append("file", file);
+
+            // Show loading spinner
+            document.getElementById("loadingSpinner").style.display = "block";
+            document.getElementById("result").innerHTML = "";
+
+            fetch("/upload", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("loadingSpinner").style.display = "none"; // Hide loading spinner
+                
+                if (data.result) {
+                    document.getElementById("result").innerHTML = `<strong>${data.result}</strong>`;
+                    if (data.result.includes("Fake")) {
+                        document.getElementById("result").classList.add("error");
+                        document.getElementById("result").classList.remove("success");
+                    } else {
+                        document.getElementById("result").classList.add("success");
+                        document.getElementById("result").classList.remove("error");
+                    }
+                } else {
+                    document.getElementById("result").innerHTML = "An error occurred.";
+                }
+            })
+            .catch(error => {
+                document.getElementById("loadingSpinner").style.display = "none"; // Hide loading spinner
+                document.getElementById("result").innerHTML = "An error occurred.";
+            });
+
+            // Preview the selected image/video
+            if (file.type.startsWith("image")) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var img = document.createElement("img");
+                    img.src = e.target.result;
+                    img.style.maxWidth = "300px";
+                    document.getElementById("preview").innerHTML = "";
+                    document.getElementById("preview").appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type.startsWith("video")) {
+                var video = document.createElement("video");
+                video.src = URL.createObjectURL(file);
+                video.controls = true;
+                video.style.maxWidth = "300px";
+                document.getElementById("preview").innerHTML = "";
+                document.getElementById("preview").appendChild(video);
+            }
+        }
+    </script>
+
+</body>
+</html>
